@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sentiment Analysis</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                margin: 0;
+                background-color: #f4f4f4;
+                color: #333;
+            }
+    
+            h1 {
+                color: #2c3e50; /* Darker blue */
+            }
+    
+            #container {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+    
+            #tweet-input {
+                width: 400px;
+                height: 120px;
+                padding: 10px;
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                resize: vertical; /* Allow vertical resizing */
+            }
+    
+            button {
+                background-color: #2c3e50; /* Darker blue */
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: background-color 0.3s ease; /* Smooth transition */
+            }
+    
+            button:hover {
+                background-color: #34495e; /* Even darker blue on hover */
+            }
+    
+            #result {
+                font-weight: bold;
+                margin-top: 15px;
+                font-size: 1.2em;
+            }
+    
+            .positive {
+                color: #27ae60; /* Green for positive */
+            }
+    
+            .negative {
+                color: #c0392b; /* Red for negative */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <h1>Sentiment Analysis</h1>
+            <textarea id="tweet-input" placeholder="Enter your tweet here"></textarea><br>
+            <button onclick="analyzeSentiment()">Analyze</button>
+            <div id="result"></div>
+        </div>
+    <script>
+        async function analyzeSentiment() {
+            const tweet = document.getElementById('tweet-input').value;
+
+            if (tweet.trim() === "") {
+                alert("Please enter a tweet.");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tweets: [{ text: tweet }] }) // Send as a list of tweets
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Server error");
+                }
+
+                const data = await response.json();
+                const sentiment = data[0].sentiment; // Get sentiment from the first tweet in the response
+                const confidence = data[0].confidence;
+
+                const sentimentClass = sentiment === "positive" ? "positive" : "negative";
+                document.getElementById('result').innerHTML = `<span class="${sentimentClass}">Sentiment: ${sentiment}</span> (Confidence: ${confidence.toFixed(2)})`;
+
+            } catch (error) {
+                document.getElementById('result').innerHTML = `Error: ${error.message}`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
